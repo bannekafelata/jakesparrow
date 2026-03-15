@@ -322,14 +322,8 @@ function wireGBCButtons(){
     ()=>{inp.gun=true;inp.gunPressed=true;},
     ()=>{inp.gun=false;}
   );
-  bind('btn-start',
-    ()=>{inp.pausePressed=true;},
-    ()=>{}
-  );
-  bind('btn-select',
-    ()=>{inp.restartPressed=true;},
-    ()=>{}
-  );
+  // btn-start et btn-select sont gérés séparément après la boucle
+  // (ils ont une logique contextuelle : lancer jeu sur titre, pause en jeu, etc.)
   const muteEl=document.getElementById('btn-mute');
   if(muteEl){
     muteEl.addEventListener('touchstart',e=>{e.preventDefault();muted=!muted;if(musicGain)musicGain.gain.value=muted?0:.25;muteEl.textContent=muted?'🔇':'🔊';},{passive:false});
@@ -1882,33 +1876,77 @@ function loop(){
 }
 
 // ═══════════════════════════════════════════════════════════
-// CLIC / TOUCH SUR CANVAS
+// CLIC / TOUCH SUR CANVAS (PC + mobile GBC)
 // ═══════════════════════════════════════════════════════════
-C.addEventListener('click',e=>{
-  const rect=C.getBoundingClientRect(),sx=C.width/rect.width,sy2=C.height/rect.height;
-  const x=(e.clientX-rect.left)*sx,y=(e.clientY-rect.top)*sy2;
-  if(gs===GS.TITLE){
-    if(x>titleBtn.x&&x<titleBtn.x+titleBtn.w&&y>titleBtn.y&&y<titleBtn.y+titleBtn.h){
+
+function handleCanvasAction(canvasEl, clientX, clientY){
+  const rect = canvasEl.getBoundingClientRect();
+  // Convertit les coords CSS en coords logiques 1024×576
+  const x = (clientX - rect.left) * (GAME_W / rect.width);
+  const y = (clientY - rect.top)  * (GAME_H / rect.height);
+  if(gs === GS.TITLE){
+    const b = titleBtn;
+    if(x > b.x && x < b.x+b.w && y > b.y && y < b.y+b.h){
       if(!musicOk){startMusic();musicOk=true;}
       loadLevel(0);score=0;
+      return;
     }
-    if(x>W-80&&y<26)showParents();
-    if(x<80&&y<26)showKeysConfig();
+    if(x > W-90 && y < 30) showParents();
+    if(x < 90  && y < 30) showKeysConfig();
   }
-  if((gs===GS.PAUSE||gs===GS.EXPIRED)&&x>W-80&&y<26)showParents();
-  // Mute icon
-  if(x>W-30&&y>20&&y<44){muted=!muted;if(musicGain)musicGain.gain.value=muted?0:.25;}
+  if((gs===GS.PAUSE||gs===GS.EXPIRED) && x > W-90 && y < 30) showParents();
+}
+
+// Attache les listeners sur les DEUX canvas
+[CPC, CGBC].forEach(cv => {
+  cv.addEventListener('click', e => {
+    handleCanvasAction(cv, e.clientX, e.clientY);
+  });
+  cv.addEventListener('touchend', e => {
+    e.preventDefault();
+    for(const t of e.changedTouches){
+      handleCanvasAction(cv, t.clientX, t.clientY);
+    }
+  }, {passive:false});
 });
-C.addEventListener('touchend',e=>{
-  e.preventDefault();
-  if(gs!==GS.TITLE)return;
-  for(const t of e.changedTouches){
-    const rect=C.getBoundingClientRect(),x=(t.clientX-rect.left)*(C.width/rect.width),y=(t.clientY-rect.top)*(C.height/rect.height);
-    if(x>titleBtn.x&&x<titleBtn.x+titleBtn.w&&y>titleBtn.y&&y<titleBtn.y+titleBtn.h){
-      if(!musicOk){startMusic();musicOk=true;}loadLevel(0);score=0;
+
+// Bouton Start DOM → lancer le jeu depuis l'écran titre,
+// ou mettre en pause pendant la partie
+const _startEl = document.getElementById('btn-start');
+if(_startEl){
+  const _doStart = e => {
+    e.preventDefault();
+    if(gs === GS.TITLE){
+      // Lance la partie
+      if(!musicOk){startMusic();musicOk=true;}
+      loadLevel(0);score=0;
+    } else if(gs === GS.PLAY){
+      inp.pausePressed = true;
+    } else if(gs === GS.PAUSE){
+      inp.pausePressed = true;
+    } else if(gs === GS.GAMEOVER || gs === GS.WIN){
+      inp.restartPressed = true;
     }
-  }
-},{passive:false});
+  };
+  _startEl.addEventListener('touchstart', _doStart, {passive:false});
+  _startEl.addEventListener('click', _doStart);
+}
+
+// Bouton Select DOM → restart dans tous les états
+const _selEl = document.getElementById('btn-select');
+if(_selEl){
+  const _doSel = e => {
+    e.preventDefault();
+    if(gs === GS.TITLE){
+      if(!musicOk){startMusic();musicOk=true;}
+      loadLevel(0);score=0;
+    } else {
+      inp.restartPressed = true;
+    }
+  };
+  _selEl.addEventListener('touchstart', _doSel, {passive:false});
+  _selEl.addEventListener('click', _doSel);
+}
 
 // ═══════════════════════════════════════════════════════════
 // PAGE CONFIGURATION TOUCHES (DOM overlay)
