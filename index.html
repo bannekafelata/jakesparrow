@@ -188,36 +188,37 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a0a2e;display:flex
 // ═══════════════════════════════════════════════════════════
 
 // Canvas dual : PC (#C) et mobile GBC (#C2)
-// On utilise toujours le canvas ACTIF selon breakpoint
 const CPC = document.getElementById('C');
 const CGBC = document.getElementById('C2');
 let C = CPC, ctx = CPC.getContext('2d');
 let W = 1024, H = 576;
+let mobileScale = 1; // 0.5 sur mobile, 1 sur PC
 
-// Résolution logique fixe du jeu (inchangée)
+// Résolution logique du jeu : toujours 1024×576
 const GAME_W = 1024, GAME_H = 576;
 
 function getActiveCanvas(){
-  return window.innerWidth<=700||window.innerHeight<=520 ? CGBC : CPC;
+  return window.innerWidth<=700||window.innerHeight<=560 ? CGBC : CPC;
 }
 
 function resize(){
-  const isMobile = window.innerWidth<=700||window.innerHeight<=520;
+  const isMobile = window.innerWidth<=700||window.innerHeight<=560;
   if(isMobile){
-    // Canvas GBC : largeur = largeur du shell - padding
-    const shellW = Math.min(window.innerWidth, 420) - 20;
-    CGBC.width  = GAME_W;
-    CGBC.height = GAME_H;
-    // CSS scale via CSS width:100%
+    // Canvas interne = moitié → zoom ×2 visuel
+    CGBC.width  = 512;
+    CGBC.height = 288;
     C = CGBC; ctx = CGBC.getContext('2d');
+    mobileScale = 0.5;
   } else {
     const r = GAME_W/GAME_H, ww=window.innerWidth, wh=window.innerHeight;
     if(ww/wh>r){CPC.height=Math.min(wh,GAME_H);CPC.width=Math.round(CPC.height*r);}
     else{CPC.width=Math.min(ww,GAME_W);CPC.height=Math.round(CPC.width/r);}
     CPC.style.width=CPC.width+'px';CPC.style.height=CPC.height+'px';
     C = CPC; ctx = CPC.getContext('2d');
+    mobileScale = 1;
   }
-  W = GAME_W; H = GAME_H; // logique toujours 1024x576
+  // W/H logiques restent toujours 1024×576 pour toute la logique de jeu
+  W = GAME_W; H = GAME_H;
 }
 resize();
 window.addEventListener('resize',resize);
@@ -1824,7 +1825,16 @@ function loop(){
   // Resize only when needed (not every frame for perf)
   const newC=getActiveCanvas();
   if(newC!==C){C=newC;ctx=newC.getContext('2d');resize();}
-  ctx.clearRect(0,0,W,H);
+
+  // Sur mobile : efface le canvas physique (512×288) puis scale 0.5
+  // → tout le rendu logique 1024×576 tient dans 512×288 = zoom ×2
+  if(mobileScale < 1){
+    ctx.clearRect(0, 0, C.width, C.height);
+    ctx.save();
+    ctx.scale(mobileScale, mobileScale);
+  } else {
+    ctx.clearRect(0, 0, W, H);
+  }
 
   switch(gs){
     case GS.TITLE:
@@ -1872,6 +1882,9 @@ function loop(){
       break;
   }
 
+  // Restaure le scale mobile après le rendu de la frame
+  if(mobileScale < 1) ctx.restore();
+
   // Mute shortcut (M key) handled in PLAY state above
 }
 
@@ -1881,7 +1894,8 @@ function loop(){
 
 function handleCanvasAction(canvasEl, clientX, clientY){
   const rect = canvasEl.getBoundingClientRect();
-  // Convertit les coords CSS en coords logiques 1024×576
+  // Convertit les coords CSS → coords logiques 1024×576
+  // Sur mobile : canvas interne = 512×288 mais logique = 1024×576
   const x = (clientX - rect.left) * (GAME_W / rect.width);
   const y = (clientY - rect.top)  * (GAME_H / rect.height);
   if(gs === GS.TITLE){
