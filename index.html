@@ -8,192 +8,163 @@
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#0d0d14;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;font-family:'Courier New',monospace}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a0a2e;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;font-family:'Courier New',monospace;}
 
-/* ── Canvas seul sur PC ─────────────────────────────── */
+/* ═══ PC ════════════════════════════════════════════════ */
 #game-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
-canvas{display:block;image-rendering:auto;box-shadow:0 0 60px rgba(200,147,10,.18),0 0 120px rgba(80,60,180,.12);}
+#game-wrap canvas{display:block;image-rendering:auto;box-shadow:0 0 60px rgba(200,147,10,.2),0 0 120px rgba(80,40,160,.15);}
 
-/* ── Coque Game Boy (mobile uniquement) ─────────────── */
+/* ═══ MOBILE : émulateur vertical ══════════════════════ */
 #gbc-shell{
-  display:none;
-  flex-direction:column;
-  align-items:center;
-  background: linear-gradient(170deg,#2a2a3a 0%,#1a1a28 40%,#141420 100%);
-  border-radius:18px 18px 50% 50% / 18px 18px 30% 30%;
-  border:3px solid #3a3a50;
-  box-shadow:0 0 0 1px #555,0 8px 32px #000,inset 0 2px 0 rgba(255,255,255,.08);
-  padding:10px 10px 0 10px;
-  width:100vw; max-width:420px;
-  position:relative;
+  display:none;flex-direction:column;
+  width:100vw;height:100dvh;max-width:480px;
+  background:linear-gradient(180deg,#000 0%,#000 50%,#5020a0 50%,#7030c8 70%,#8844e0 100%);
+  position:relative;overflow:hidden;
 }
-/* Écran LCD encadré */
+#gbc-top{background:#000;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;padding:8px 10px 0;}
 #screen-bezel{
-  background:#0a0810;
-  border-radius:10px;
-  border:4px solid #0d0d18;
-  box-shadow:inset 0 0 18px rgba(0,0,0,.8), 0 0 0 2px #2a2a40;
-  padding:4px;
-  width:100%;
+  width:100%;background:#060410;border-radius:8px;
+  border:3px solid #1a1020;
+  box-shadow:inset 0 0 24px rgba(0,0,0,.95),0 0 0 1px #222,0 4px 20px rgba(0,0,0,.9);
+  overflow:hidden;position:relative;
 }
-#screen-bezel canvas{
-  border-radius:6px;
-  width:100% !important;
-  height:auto !important;
-  display:block;
-  box-shadow:none;
-  image-rendering:auto;
+#screen-bezel::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:10;}
+#screen-bezel canvas{width:100%!important;height:auto!important;display:block;image-rendering:auto;}
+#gbc-mid{background:#000;padding:3px 10px 6px;display:flex;align-items:center;justify-content:space-between;}
+#gbc-brand{color:#5522aa;font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.6;}
+#gbc-leds{display:flex;gap:5px;align-items:center;}
+.led{width:6px;height:6px;border-radius:50%;}
+.led-green{background:#00ff44;box-shadow:0 0 5px #00ff44;}
+.led-red{background:#ff3300;opacity:.25;}
+
+/* ── Contrôles violets ─────────────────────────────── */
+#gbc-controls{flex:1;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;min-height:0;}
+
+/* D-PAD croix épaisse noire */
+#dpad{width:108px;height:108px;position:relative;flex-shrink:0;}
+#dpad-h2,#dpad-v2{
+  position:absolute;
+  background:linear-gradient(160deg,#1e1e1e,#0a0a0a);
+  border-radius:8px;
+  box-shadow:0 4px 0 #000,inset 0 1px 0 rgba(255,255,255,.08),0 0 0 1px #333;
 }
-/* Label GBC */
-#gbc-label{
-  color:#9988cc;font-size:9px;letter-spacing:3px;text-transform:uppercase;
-  margin:4px 0 6px;text-align:center;opacity:.7;
+#dpad-h2{width:108px;height:36px;top:36px;left:0;}
+#dpad-v2{width:36px;height:108px;top:0;left:36px;}
+#dpad-center2{position:absolute;width:36px;height:36px;top:36px;left:36px;background:#111;border-radius:4px;z-index:3;}
+.dp{position:absolute;z-index:5;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.35);font-size:10px;-webkit-tap-highlight-color:transparent;}
+#dp-up{width:36px;height:36px;top:0;left:36px;}
+#dp-dn{width:36px;height:36px;bottom:0;left:36px;}
+#dp-lt{width:36px;height:36px;top:36px;left:0;}
+#dp-rt{width:36px;height:36px;top:36px;right:0;}
+.dp:active,.dp.active{background:rgba(255,255,255,.18);border-radius:4px;color:#fff;}
+
+/* Boutons système */
+#sys-btns{display:flex;flex-direction:column;align-items:center;gap:7px;}
+.sys2{
+  background:linear-gradient(135deg,#2a1555,#18083a);
+  border:1px solid #4a2888;border-radius:20px;
+  color:#8855cc;font-size:8px;letter-spacing:1px;
+  padding:5px 14px;cursor:pointer;text-transform:uppercase;
+  box-shadow:0 2px 0 #000,inset 0 1px 0 rgba(255,255,255,.07);
+  min-width:54px;text-align:center;-webkit-tap-highlight-color:transparent;
 }
-/* Zone de contrôles */
-#gbc-controls{
+.sys2:active{background:#3a2060;color:#cc99ff;transform:translateY(1px);}
+
+/* Boutons A/B gros noirs */
+#ab-zone{display:flex;flex-direction:column;align-items:flex-end;gap:0;flex-shrink:0;}
+#ab-row{display:flex;align-items:center;gap:8px;}
+.abtn{
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:bold;color:rgba(255,255,255,.7);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;flex-shrink:0;position:relative;
+  font-size:16px;letter-spacing:0;
+}
+.abtn::after{content:'';position:absolute;top:5px;left:7px;width:35%;height:22%;background:rgba(255,255,255,.2);border-radius:50%;transform:rotate(-20deg);}
+.abtn:active,.abtn.active{filter:brightness(.75);transform:translateY(2px);}
+#btn-b{
+  width:56px;height:56px;
+  background:radial-gradient(circle at 35% 30%,#252525,#080808);
+  box-shadow:0 5px 0 #000,0 0 0 2px #2a2a2a;
+  margin-top:14px;
+}
+#btn-a{
+  width:56px;height:56px;
+  background:radial-gradient(circle at 35% 30%,#252525,#080808);
+  box-shadow:0 5px 0 #000,0 0 0 2px #2a2a2a;
+}
+
+/* Bas */
+#gbc-bottom2{
+  background:linear-gradient(180deg,#7030c0,#4a1888);
+  padding:5px 16px 8px;
   display:flex;align-items:center;justify-content:space-between;
-  width:100%;padding:6px 8px 4px;
-}
-/* D-Pad */
-#dpad{
-  width:88px;height:88px;position:relative;flex-shrink:0;
-}
-#dpad-h,#dpad-v{
-  position:absolute;background:linear-gradient(135deg,#252535,#1a1a28);
-  border-radius:4px;border:1px solid #3a3a50;
-  display:flex;align-items:center;justify-content:center;
-}
-#dpad-h{width:88px;height:28px;top:30px;left:0;}
-#dpad-v{width:28px;height:88px;top:0;left:30px;}
-#dpad-center{position:absolute;width:28px;height:28px;top:30px;left:30px;background:#1e1e2e;border-radius:2px;z-index:2;}
-.dpad-arrow{
-  position:absolute;width:28px;height:28px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;color:#9988cc;z-index:3;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-}
-#dpad-up{top:0;left:30px;}
-#dpad-down{bottom:0;left:30px;}
-#dpad-left{top:30px;left:0;}
-#dpad-right{top:30px;right:0;}
-.dpad-arrow:active,#dpad-up.pressed,#dpad-down.pressed,#dpad-left.pressed,#dpad-right.pressed{
-  background:rgba(150,130,255,.25);border-radius:3px;color:#fff;
-}
-/* Boutons centraux (START/SELECT) */
-#center-btns{
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-}
-.sys-btn{
-  background:linear-gradient(135deg,#2a2a3a,#1e1e2c);
-  border:1px solid #4a4a60;border-radius:12px;
-  color:#7777aa;font-size:9px;letter-spacing:1px;
-  padding:5px 12px;cursor:pointer;text-transform:uppercase;
-  -webkit-tap-highlight-color:transparent;
-}
-.sys-btn:active{background:#3a3a50;color:#aaaacc;}
-/* Boutons A/B */
-#ab-btns{
-  display:flex;align-items:flex-end;gap:14px;flex-shrink:0;
-}
-.ab-btn{
-  width:38px;height:38px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:bold;color:#fff;cursor:pointer;
-  border:2px solid rgba(0,0,0,.3);
-  box-shadow:0 4px 0 rgba(0,0,0,.4),0 0 10px rgba(0,0,0,.3);
-  -webkit-tap-highlight-color:transparent;
-  transition:transform .05s,box-shadow .05s;
   flex-shrink:0;
 }
-.ab-btn:active,.ab-btn.pressed{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.4);}
-#btn-a{background:radial-gradient(circle at 40% 35%,#00cc55,#008833);margin-bottom:8px;}
-#btn-b{background:radial-gradient(circle at 40% 35%,#cc2222,#881111);}
-/* Bas de la coque */
-#gbc-bottom{
-  width:100%;height:28px;
-  background:linear-gradient(180deg,#1a1a28,#141420);
-  border-radius:0 0 50% 50% / 0 0 40% 40%;
-  border-top:1px solid #2a2a38;
-  display:flex;align-items:center;justify-content:center;
-  margin-top:6px;
-}
-#gbc-speaker{
-  display:flex;gap:4px;
-}
-.speaker-dot{width:4px;height:4px;border-radius:50%;background:#2a2a40;}
+.speaker-line{display:flex;flex-direction:column;gap:3px;}
+.sp-slot{width:26px;height:3px;background:rgba(0,0,0,.45);border-radius:2px;}
+#bottom-brand{color:rgba(255,255,255,.22);font-size:7px;letter-spacing:2px;text-transform:uppercase;}
 
-/* ── Activation responsive ─────────────────────────── */
-@media (max-width:700px),(max-height:520px){
+@media (max-width:700px),(max-height:560px){
+  body{background:#000;}
   #game-wrap{display:none!important;}
   #gbc-shell{display:flex!important;}
 }
 
-/* ── Overlays DOM ───────────────────────────────────── */
+/* ═══ Overlays DOM ══════════════════════════════════════ */
 .overlay{position:fixed;inset:0;background:rgba(0,0,20,.93);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'Courier New',monospace}
-.panel{background:linear-gradient(135deg,#1a0a30,#0d0820);border:2px solid #c8930a;border-radius:14px;padding:24px 30px;max-width:440px;width:92%;color:#ffd700;text-align:center;box-shadow:0 0 40px rgba(200,147,10,.3);max-height:90vh;overflow-y:auto;}
-.panel h2{font-size:1.3em;margin-bottom:6px;font-family:'Pirata One',serif}
-.panel p.sub{color:#aaa;font-size:.78em;margin-bottom:16px}
-.panel input[type=number],.panel select{width:100%;padding:8px;font-size:.95em;font-family:inherit;background:#0d0820;border:2px solid #c8930a;border-radius:6px;color:#ffd700;text-align:center;outline:none;margin-bottom:8px}
-.panel input[type=number]:focus,.panel select:focus{border-color:#ffd700;box-shadow:0 0 8px rgba(255,215,0,.3)}
-.btn{background:#c8930a;color:#1a0a00;border:none;border-radius:8px;padding:9px 22px;font-size:.9em;font-weight:bold;cursor:pointer;font-family:inherit;transition:filter .12s,transform .1s}
-.btn:hover{filter:brightness(1.18);transform:translateY(-1px)}
+.panel{background:linear-gradient(135deg,#1a0a30,#0d0820);border:2px solid #c8930a;border-radius:14px;padding:22px 26px;max-width:420px;width:92%;color:#ffd700;text-align:center;box-shadow:0 0 40px rgba(200,147,10,.3);max-height:90vh;overflow-y:auto;}
+.panel h2{font-size:1.22em;margin-bottom:5px;font-family:'Pirata One',serif}
+.panel p.sub{color:#aaa;font-size:.76em;margin-bottom:14px}
+.panel input[type=number],.panel select{width:100%;padding:7px;font-size:.9em;font-family:inherit;background:#0d0820;border:2px solid #c8930a;border-radius:6px;color:#ffd700;text-align:center;outline:none;margin-bottom:8px}
+.btn{background:#c8930a;color:#1a0a00;border:none;border-radius:7px;padding:8px 20px;font-size:.87em;font-weight:bold;cursor:pointer;font-family:inherit;}
+.btn:hover{filter:brightness(1.15);}
 .btn.sec{background:transparent;color:#aac;border:1px solid #aac;margin-top:6px}
-.btn.sec:hover{background:rgba(170,170,204,.12)}
 .btn.red{background:transparent;color:#f88;border:1px solid #f88}
-.key-row{display:flex;align-items:center;justify-content:space-between;padding:6px 4px;border-bottom:1px solid rgba(200,147,10,.18)}
+.key-row{display:flex;align-items:center;justify-content:space-between;padding:5px 2px;border-bottom:1px solid rgba(200,147,10,.18)}
 .key-row:last-child{border-bottom:none}
-.key-label{color:#ffeeaa;font-size:.88em;text-align:left}
-.key-box{background:#0d0820;border:2px solid #c8930a;border-radius:6px;padding:4px 12px;font-size:.82em;color:#ffd700;min-width:80px;cursor:pointer;transition:border-color .15s}
+.key-label{color:#ffeeaa;font-size:.84em;}
+.key-box{background:#0d0820;border:2px solid #c8930a;border-radius:5px;padding:3px 10px;font-size:.78em;color:#ffd700;min-width:74px;cursor:pointer;}
 .key-box.listening{border-color:#00ffaa;color:#00ffaa;animation:blink .5s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-.err-msg{color:#ff4444;font-size:.8em;min-height:14px;margin:3px 0 7px}
+.err-msg{color:#ff4444;font-size:.77em;min-height:13px;margin:2px 0 6px}
 </style>
 </head>
 <body>
 
-<!-- ── PC : canvas seul ─────────────────────────────── -->
-<div id="game-wrap">
-  <canvas id="C"></canvas>
-</div>
+<!-- PC -->
+<div id="game-wrap"><canvas id="C"></canvas></div>
 
-<!-- ── Mobile : coque Game Boy Color ────────────────── -->
+<!-- Mobile GBC -->
 <div id="gbc-shell">
-  <!-- Écran -->
-  <div id="gbc-label">☠ Black Pearl ☠</div>
-  <div id="screen-bezel">
-    <canvas id="C2"></canvas>
+  <div id="gbc-top">
+    <div id="screen-bezel"><canvas id="C2"></canvas></div>
   </div>
-  <!-- Contrôles -->
+  <div id="gbc-mid">
+    <span id="gbc-brand">☠ Black Pearl</span>
+    <div id="gbc-leds"><div class="led led-green"></div><div class="led led-red"></div></div>
+  </div>
   <div id="gbc-controls">
-    <!-- D-Pad -->
     <div id="dpad">
-      <div id="dpad-h"></div>
-      <div id="dpad-v"></div>
-      <div id="dpad-center"></div>
-      <div class="dpad-arrow" id="dpad-up">▲</div>
-      <div class="dpad-arrow" id="dpad-down">▼</div>
-      <div class="dpad-arrow" id="dpad-left">◄</div>
-      <div class="dpad-arrow" id="dpad-right">►</div>
+      <div id="dpad-h2"></div><div id="dpad-v2"></div><div id="dpad-center2"></div>
+      <div class="dp" id="dp-up">▲</div><div class="dp" id="dp-dn">▼</div>
+      <div class="dp" id="dp-lt">◄</div><div class="dp" id="dp-rt">►</div>
     </div>
-    <!-- START / SELECT / MUTE -->
-    <div id="center-btns">
-      <div class="sys-btn" id="btn-select">Select</div>
-      <div class="sys-btn" id="btn-start">Start</div>
-      <div class="sys-btn" id="btn-mute">🔊</div>
+    <div id="sys-btns">
+      <div class="sys2" id="btn-select">Select</div>
+      <div class="sys2" id="btn-start">Start</div>
+      <div class="sys2" id="btn-mute">🔊</div>
     </div>
-    <!-- A / B -->
-    <div id="ab-btns">
-      <div class="ab-btn" id="btn-b">B</div>
-      <div class="ab-btn" id="btn-a">A</div>
+    <div id="ab-zone">
+      <div id="ab-row">
+        <div class="abtn" id="btn-b">B</div>
+        <div class="abtn" id="btn-a">A</div>
+      </div>
     </div>
   </div>
-  <!-- Bas arrondi -->
-  <div id="gbc-bottom">
-    <div id="gbc-speaker">
-      <div class="speaker-dot"></div><div class="speaker-dot"></div>
-      <div class="speaker-dot"></div><div class="speaker-dot"></div>
-      <div class="speaker-dot"></div>
-    </div>
+  <div id="gbc-bottom2">
+    <div class="speaker-line"><div class="sp-slot"></div><div class="sp-slot"></div><div class="sp-slot"></div></div>
+    <span id="bottom-brand">Jack Sparrow</span>
+    <div class="speaker-line"><div class="sp-slot"></div><div class="sp-slot"></div><div class="sp-slot"></div></div>
   </div>
 </div>
 
@@ -313,19 +284,19 @@ function wireGBCButtons(){
     el.addEventListener('mousedown',dn);
     el.addEventListener('mouseup',up);
   }
-  bind('dpad-left',
+  bind('dp-lt',
     ()=>{inp.left=true;},
     ()=>{inp.left=false;}
   );
-  bind('dpad-right',
+  bind('dp-rt',
     ()=>{inp.right=true;},
     ()=>{inp.right=false;}
   );
-  bind('dpad-up',
+  bind('dp-up',
     ()=>{inp.jump=true;inp.jumpPressed=true;},
     ()=>{inp.jump=false;}
   );
-  bind('dpad-down',
+  bind('dp-dn',
     ()=>{},
     ()=>{}
   );
@@ -965,10 +936,149 @@ const LEVELS=[
   exitX:3580,
   boss:{x:3620,y:370,hp:14,maxHp:14}
 },
+// ── NIVEAU 5 : La Taverne de Tortuga ─────────────────
+{name:'Taverne de Tortuga',width:4000,bgId:4,
+  playerStart:{x:80,y:420},
+  platforms:[
+    // Sol de la taverne en bois
+    {x:0,y:480,w:500,h:96,t:'wood'},
+    // Tables et comptoirs
+    {x:120,y:400,w:120,h:20,t:'crate'},{x:280,y:360,w:80,h:20,t:'wood'},
+    {x:420,y:410,w:80,h:20,t:'crate'},
+    {x:500,y:480,w:100,h:96,t:'wood'},{x:520,y:390,w:80,h:20,t:'chain'},
+    {x:600,y:480,w:400,h:96,t:'wood'},
+    // Étage 1 taverne (balcon)
+    {x:660,y:300,w:120,h:20,t:'wood'},{x:820,y:340,w:100,h:20,t:'wood'},
+    {x:950,y:280,w:80,h:20,t:'chain'},
+    {x:1000,y:480,w:400,h:96,t:'wood'},
+    {x:1050,y:380,w:100,h:20,t:'crate'},{x:1200,y:320,w:80,h:20,t:'wood'},
+    {x:1350,y:260,w:80,h:20,t:'chain'},
+    {x:1400,y:480,w:400,h:96,t:'wood'},
+    {x:1480,y:380,w:100,h:20,t:'wood'},{x:1620,y:310,w:80,h:20,t:'wood'},
+    {x:1760,y:250,w:80,h:20,t:'chain'},
+    // Rue de Tortuga
+    {x:1800,y:480,w:600,h:96,t:'sand'},
+    {x:1880,y:380,w:100,h:20,t:'rock'},{x:2050,y:310,w:100,h:20,t:'rock'},
+    {x:2200,y:380,w:80,h:20,t:'rock'},{x:2350,y:430,w:80,h:60,t:'crate'},
+    {x:2400,y:480,w:600,h:96,t:'wood'},
+    {x:2480,y:370,w:80,h:20,t:'wood'},{x:2620,y:300,w:100,h:20,t:'chain'},
+    {x:2780,y:380,w:80,h:20,t:'wood'},
+    {x:3000,y:480,w:400,h:96,t:'sand'},
+    {x:3080,y:360,w:100,h:20,t:'rock'},{x:3230,y:290,w:80,h:20,t:'rock'},
+    {x:3380,y:360,w:100,h:20,t:'rock'},
+    {x:3400,y:480,w:600,h:96,t:'wood'},
+    {x:3480,y:380,w:80,h:20,t:'wood'},{x:3620,y:310,w:100,h:20,t:'chain'},
+    {x:3820,y:420,w:180,h:60,t:'exit'},
+    // Pièges
+    {x:550,y:576,w:50,h:1,t:'spike'},{x:1050,y:576,w:50,h:1,t:'spike'},
+    {x:1800,y:576,w:60,h:1,t:'spike'},{x:2400,y:576,w:60,h:1,t:'spike'},
+    {x:3000,y:576,w:60,h:1,t:'spike'},{x:3600,y:576,w:60,h:1,t:'spike'},
+  ],
+  enemies:[
+    {x:200,y:440,t:'pirate'},{x:350,y:440,t:'pirate'},{x:480,y:440,t:'skeleton'},
+    {x:680,y:260,t:'skeleton'},{x:850,y:300,t:'pirate'},{x:1000,y:440,t:'skeleton'},
+    {x:1200,y:280,t:'pirate'},{x:1380,y:220,t:'skeleton'},{x:1500,y:440,t:'pirate'},
+    {x:1650,y:270,t:'skeleton'},{x:1900,y:440,t:'skeleton'},{x:2080,y:270,t:'pirate'},
+    {x:2300,y:440,t:'skeleton'},{x:2500,y:440,t:'pirate'},{x:2650,y:260,t:'skeleton'},
+    {x:2850,y:440,t:'pirate'},{x:3100,y:320,t:'skeleton'},{x:3300,y:440,t:'pirate'},
+    {x:3500,y:440,t:'skeleton'},{x:3650,y:270,t:'skeleton'},
+  ],
+  coins:[
+    ...coinsRow(130,370,4),...coinsRow(520,360,3),...coinsRow(850,310,3),
+    ...coinsRow(1220,290,3),...coinsRow(1640,220,3),...coinsRow(1920,350,3),
+    ...coinsRow(2480,340,4),...coinsRow(2780,350,3),...coinsRow(3240,260,3),
+    ...coinsRow(3480,350,4),
+  ],
+  ammos:[{x:280,y:330},{x:820,y:310},{x:1350,y:230},{x:2000,y:350},{x:2780,y:350},{x:3500,y:350}],
+  exitX:3820,
+  boss:{x:3860,y:380,hp:16,maxHp:16}
+},
+// ── NIVEAU 6 : Mer des Caraïbes – La Bataille Finale ──
+{name:'Mer des Caraïbes',width:4400,bgId:5,
+  playerStart:{x:80,y:380},
+  platforms:[
+    // Épaves et rochers émergents
+    {x:0,y:440,w:280,h:136,t:'wood'},
+    {x:60,y:360,w:80,h:20,t:'wood'},{x:160,y:300,w:80,h:20,t:'chain'},
+    // Rochers coralliens
+    {x:280,y:440,w:120,h:136,t:'rock'},
+    {x:300,y:350,w:80,h:20,t:'rock'},{x:380,y:280,w:80,h:20,t:'rock'},
+    // Mâts et ponts
+    {x:400,y:440,w:200,h:136,t:'wood'},
+    {x:420,y:350,w:80,h:20,t:'chain'},{x:520,y:270,w:80,h:20,t:'wood'},
+    {x:580,y:360,w:80,h:20,t:'chain'},
+    {x:600,y:440,w:200,h:136,t:'rock'},
+    {x:640,y:350,w:80,h:20,t:'rock'},{x:750,y:280,w:80,h:20,t:'rock'},
+    {x:800,y:440,w:300,h:136,t:'wood'},
+    {x:860,y:340,w:100,h:20,t:'wood'},{x:980,y:260,w:80,h:20,t:'chain'},
+    {x:1060,y:340,w:80,h:20,t:'wood'},
+    // Long pont suspendu
+    {x:1100,y:440,w:400,h:136,t:'wood'},
+    {x:1150,y:340,w:80,h:20,t:'chain'},{x:1280,y:260,w:80,h:20,t:'wood'},
+    {x:1400,y:200,w:80,h:20,t:'chain'},{x:1480,y:270,w:80,h:20,t:'wood'},
+    // Épave centrale
+    {x:1500,y:440,w:400,h:136,t:'rock'},
+    {x:1560,y:340,w:80,h:20,t:'rock'},{x:1680,y:270,w:80,h:20,t:'rock'},
+    {x:1800,y:340,w:80,h:20,t:'rock'},
+    // Passage difficile avec vides
+    {x:1900,y:440,w:150,h:136,t:'wood'},
+    {x:2100,y:440,w:150,h:136,t:'wood'},{x:2130,y:340,w:80,h:20,t:'chain'},
+    {x:2300,y:440,w:200,h:136,t:'rock'},{x:2330,y:260,w:80,h:20,t:'rock'},
+    {x:2500,y:440,w:300,h:136,t:'wood'},
+    {x:2550,y:340,w:100,h:20,t:'chain'},{x:2680,y:260,w:80,h:20,t:'wood'},
+    {x:2760,y:340,w:80,h:20,t:'chain'},
+    // Section finale intense
+    {x:2800,y:440,w:300,h:136,t:'rock'},
+    {x:2850,y:320,w:80,h:20,t:'rock'},{x:2980,y:240,w:80,h:20,t:'rock'},
+    {x:3100,y:440,w:300,h:136,t:'wood'},
+    {x:3150,y:320,w:80,h:20,t:'wood'},{x:3270,y:240,w:80,h:20,t:'chain'},
+    {x:3380,y:340,w:80,h:20,t:'wood'},
+    {x:3400,y:440,w:300,h:136,t:'rock'},
+    {x:3450,y:320,w:100,h:20,t:'rock'},{x:3580,y:240,w:80,h:20,t:'rock'},
+    {x:3700,y:440,w:300,h:136,t:'wood'},
+    {x:3750,y:320,w:80,h:20,t:'chain'},{x:3880,y:240,w:80,h:20,t:'wood'},
+    // Boss final arena
+    {x:4000,y:440,w:400,h:136,t:'exit'},
+    {x:4050,y:320,w:120,h:20,t:'rock'},{x:4230,y:280,w:100,h:20,t:'rock'},
+    // Pièges multiples
+    {x:1900,y:576,w:200,h:1,t:'spike'},{x:2050,y:576,w:50,h:1,t:'spike'},
+    {x:280,y:576,w:120,h:1,t:'spike'},{x:600,y:576,w:200,h:1,t:'spike'},
+    {x:1100,y:576,w:60,h:1,t:'spike'},{x:2500,y:576,w:60,h:1,t:'spike'},
+    {x:3100,y:576,w:60,h:1,t:'spike'},{x:3700,y:576,w:60,h:1,t:'spike'},
+  ],
+  enemies:[
+    {x:160,y:400,t:'skeleton'},{x:280,y:400,t:'pirate'},
+    {x:400,y:400,t:'skeleton'},{x:540,y:230,t:'skeleton'},
+    {x:680,y:400,t:'pirate'},{x:800,y:400,t:'skeleton'},
+    {x:920,y:300,t:'pirate'},{x:1060,y:300,t:'skeleton'},
+    {x:1200,y:220,t:'pirate'},{x:1350,y:400,t:'skeleton'},
+    {x:1480,y:230,t:'pirate'},{x:1600,y:400,t:'skeleton'},
+    {x:1730,y:230,t:'pirate'},{x:1870,y:400,t:'skeleton'},
+    {x:2000,y:400,t:'pirate'},{x:2150,y:300,t:'skeleton'},
+    {x:2300,y:400,t:'pirate'},{x:2400,y:220,t:'skeleton'},
+    {x:2560,y:300,t:'pirate'},{x:2700,y:220,t:'skeleton'},
+    {x:2850,y:400,t:'pirate'},{x:2980,y:200,t:'skeleton'},
+    {x:3150,y:280,t:'pirate'},{x:3280,y:200,t:'skeleton'},
+    {x:3430,y:400,t:'pirate'},{x:3560,y:200,t:'skeleton'},
+    {x:3750,y:280,t:'pirate'},{x:3900,y:400,t:'skeleton'},
+    // Boss ultime
+    {x:4150,y:360,t:'boss'},
+  ],
+  coins:[
+    ...coinsRow(80,330,3),...coinsRow(320,320,3),...coinsRow(560,240,3),
+    ...coinsRow(870,310,3),...coinsRow(1150,310,3),...coinsRow(1430,170,3),
+    ...coinsRow(1640,240,3),...coinsRow(1870,310,3),...coinsRow(2180,230,3),
+    ...coinsRow(2560,230,3),...coinsRow(2870,290,3),...coinsRow(3180,210,3),
+    ...coinsRow(3480,290,3),...coinsRow(3800,210,3),
+  ],
+  ammos:[
+    {x:160,y:310},{x:540,y:300},{x:980,y:230},{x:1400,y:170},
+    {x:1800,y:310},{x:2400,y:190},{x:2980,y:210},{x:3580,y:210},{x:3900,y:290},
+  ],
+  exitX:4000,
+  boss:{x:4200,y:350,hp:20,maxHp:20}
+},
 ];
-
-// ═══════════════════════════════════════════════════════════
-// ÉTAT DU JEU
 // ═══════════════════════════════════════════════════════════
 const GS={TITLE:'TITLE',PLAY:'PLAY',PAUSE:'PAUSE',GAMEOVER:'GAMEOVER',
   WIN:'WIN',TRANS:'TRANS',EXPIRED:'EXPIRED',KEYS:'KEYS'};
@@ -1260,6 +1370,117 @@ function drawBackground(bgId){
     ctx.fillStyle=sg;ctx.fillRect(0,sy,W,H-sy);
     ctx.strokeStyle='rgba(100,180,255,.18)';ctx.lineWidth=2;
     for(let w=0;w<3;w++){ctx.beginPath();for(let x=0;x<=W;x+=15){const wy=sy+w*7+Math.sin(x*.025+t*1.5+w)*6;x===0?ctx.moveTo(x,wy):ctx.lineTo(x,wy);}ctx.stroke();}
+  } else if(bgId===4){// Tortuga — taverne chaude et colorée, coucher de soleil
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#1a0508');g.addColorStop(.3,'#3a1008');g.addColorStop(.6,'#5a2010');g.addColorStop(1,'#2a0e08');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    // Soleil couchant orange
+    const sunX=W*.7-(camX*.04)%200;
+    const sunGrad=ctx.createRadialGradient(sunX,H*.35,0,sunX,H*.35,120);
+    sunGrad.addColorStop(0,'rgba(255,200,80,.9)');sunGrad.addColorStop(.4,'rgba(255,100,20,.5)');sunGrad.addColorStop(1,'rgba(255,50,0,0)');
+    ctx.fillStyle=sunGrad;ctx.fillRect(sunX-120,H*.35-120,240,240);
+    // Nuages orangés
+    ctx.fillStyle='rgba(200,80,20,.25)';
+    for(let c=0;c<6;c++){const cx=((c*580+camX*.12+t*50)%(W+300)+W+300)%(W+300)-150;
+      ctx.beginPath();ctx.ellipse(cx,80+c*18,70+c*10,25,0,0,Math.PI*2);ctx.fill();}
+    // Bâtiments de Tortuga en silhouette
+    ctx.fillStyle='#0d0508';
+    const bldX=[-camX*.2%W,(400-camX*.2)%W,(800-camX*.2)%W,(1200-camX*.2)%W];
+    bldX.forEach((bx,i)=>{
+      const bw=90+i*20,bh=120+i*30;
+      ctx.fillRect(((bx%W+W)%W)-20,H-bh,bw,bh);
+      // Fenêtres allumées
+      ctx.fillStyle=`rgba(255,${160+i*20},40,.7)`;
+      for(let r=0;r<3;r++)for(let cc=0;cc<3;cc++)
+        ctx.fillRect(((bx%W+W)%W)+5+cc*25,H-bh+15+r*28,12,16);
+      ctx.fillStyle='#0d0508';
+    });
+    // Sol taverne brun chaud
+    const floorY=H*.84;
+    const flGrad=ctx.createLinearGradient(0,floorY,0,H);
+    flGrad.addColorStop(0,'#3a1a08');flGrad.addColorStop(1,'#1a0808');
+    ctx.fillStyle=flGrad;ctx.fillRect(0,floorY,W,H-floorY);
+    // Planches
+    ctx.strokeStyle='rgba(80,30,8,.5)';ctx.lineWidth=2;
+    for(let fx=0;fx<W;fx+=50){ctx.beginPath();ctx.moveTo(fx,floorY);ctx.lineTo(fx,H);ctx.stroke();}
+    // Torches animées
+    for(let torch=0;torch<5;torch++){
+      const tx=((torch*220-camX*.3)%(W+100)+W+100)%(W+100)-50,ty=H*.55;
+      const fl2=.6+.4*Math.sin(t*4+torch*1.7);
+      ctx.fillStyle=`rgba(255,${Math.floor(150+fl2*80)},20,${fl2*.8})`;
+      ctx.shadowColor='#ff6600';ctx.shadowBlur=20*fl2;
+      ctx.beginPath();ctx.moveTo(tx,ty);ctx.quadraticCurveTo(tx-8,ty-20,tx,ty-30);ctx.quadraticCurveTo(tx+8,ty-20,tx,ty);ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.fillStyle='#4a2a00';ctx.fillRect(tx-3,ty,6,20);// manche torche
+    }
+  } else if(bgId===5){// Mer des Caraïbes — aube/tempête épique
+    // Ciel tempétueux
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#020408');g.addColorStop(.3,'#050818');g.addColorStop(.6,'#0a1228');g.addColorStop(1,'#040808');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    // Éclairs lointains
+    if(Math.floor(t*3)%60===0){
+      ctx.strokeStyle='rgba(180,200,255,.6)';ctx.lineWidth=2;
+      const lx=W*.3+Math.random()*W*.4;
+      ctx.beginPath();ctx.moveTo(lx,0);ctx.lineTo(lx+20,80);ctx.lineTo(lx+5,120);ctx.lineTo(lx+25,200);ctx.stroke();
+    }
+    // Nuages d'orage lourds
+    ctx.fillStyle='rgba(30,30,50,.7)';
+    for(let c=0;c<8;c++){
+      const cx=((c*480+camX*.08+t*30)%(W+400)+W+400)%(W+400)-200;
+      const cy=40+c*15;
+      ctx.beginPath();ctx.ellipse(cx,cy,100+c*15,40,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(cx+60,cy-10,70,35,0,0,Math.PI*2);ctx.fill();
+    }
+    // Lune voilée
+    const moonX=W*.2-(camX*.02)%100;
+    ctx.fillStyle='rgba(200,220,255,.3)';ctx.shadowColor='#aabbff';ctx.shadowBlur=30;
+    ctx.beginPath();ctx.arc(moonX,60,35,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    // MER agitée — couches multiples
+    for(let layer=0;layer<4;layer++){
+      const seaY=H*.6+layer*20;
+      const waveGrad=ctx.createLinearGradient(0,seaY,0,H);
+      const dark=layer*.06;
+      waveGrad.addColorStop(0,`rgba(${Math.floor(8+layer*10)},${Math.floor(30+layer*12)},${Math.floor(80+layer*15)},${.7+layer*.08})`);
+      waveGrad.addColorStop(1,`rgba(2,8,20,1)`);
+      ctx.fillStyle=waveGrad;
+      ctx.beginPath();ctx.moveTo(0,seaY);
+      for(let x=0;x<=W+20;x+=15){
+        const wh=12-layer*2;
+        const wy=seaY+Math.sin(x*.025+t*(2.5-layer*.4)+layer)*wh+Math.sin(x*.04+t*1.8+layer*2)*wh*.5;
+        ctx.lineTo(x,wy);
+      }
+      ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+    }
+    // Écume sur les vagues
+    ctx.strokeStyle='rgba(180,210,255,.25)';ctx.lineWidth=1.5;
+    for(let w=0;w<4;w++){
+      ctx.beginPath();
+      for(let x=0;x<=W;x+=8){
+        const wy=H*.6+w*18+Math.sin(x*.03+t*3+w)*8;
+        x===0?ctx.moveTo(x,wy):ctx.lineTo(x,wy);
+      }
+      ctx.stroke();
+    }
+    // Silhouette Black Pearl en fond (parallaxe lente)
+    const shipX=W*.6-(camX*.06)%(W*.8);
+    ctx.save();ctx.translate(shipX,H*.55);ctx.fillStyle='rgba(0,0,0,.6)';
+    // Coque
+    ctx.beginPath();ctx.moveTo(-80,20);ctx.lineTo(80,20);ctx.lineTo(90,40);ctx.lineTo(-90,40);ctx.closePath();ctx.fill();
+    // Mâts
+    ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=3;
+    [-20,10,40].forEach(mx2=>{ctx.beginPath();ctx.moveTo(mx2,20);ctx.lineTo(mx2,-80);ctx.stroke();});
+    // Voiles
+    ctx.fillStyle='rgba(20,10,5,.5)';
+    ctx.beginPath();ctx.moveTo(-20,-80);ctx.lineTo(30,-80);ctx.lineTo(30,-20);ctx.lineTo(-20,-20);ctx.fill();
+    ctx.beginPath();ctx.moveTo(10,-80);ctx.lineTo(50,-80);ctx.lineTo(50,-30);ctx.lineTo(10,-30);ctx.fill();
+    ctx.restore();
+    // Rochers émergeant
+    for(let r=0;r<5;r++){
+      const rx=((r*400+180-camX*.4)%(W+200)+W+200)%(W+200)-100;
+      ctx.fillStyle='#1a1a24';
+      ctx.beginPath();ctx.ellipse(rx,H*.78,30+r*8,18+r*5,0,0,Math.PI*2);ctx.fill();
+    }
   }
 }
 
