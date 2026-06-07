@@ -1100,6 +1100,9 @@ let transP=0, transName='';
 let musicOk=false;
 let score=0;
 
+// Réglage gameplay uniquement : ralentit les déplacements sans toucher au visuel/CSS
+const GAME_SPEED_FACTOR = 0.55; // 0.55 ≈ rythme plateforme type Mario, moins nerveux que la version initiale
+
 // Timer parental
 let timerSecs=0, timerActive=false, timerInterval2=null;
 function loadTimer(){try{if(localStorage.getItem('jspTA')==='1'&&parseInt(localStorage.getItem('jspTS')||'0')>0){timerSecs=parseInt(localStorage.getItem('jspTS'));timerActive=true;timerInterval2=setInterval(tickTimer,1000);}}catch(e){}}
@@ -1116,8 +1119,7 @@ function createPlayer(x,y){
     swordCD:0,gunCD:0,attacking:false,attackTimer:0,
     invincible:0,dead:false,wasOnGround:false,
     animFrame:0,animTimer:0,animState:'idle',
-    // Vitesse ralentie : déplacement plus proche d'un Mario classique, sans changer le rendu visuel.
-    SPEED:3.0,JUMP:-12,GRAV:.5,MAXFALL:18,
+    SPEED:2.45,JUMP:-12,GRAV:.5,MAXFALL:18,
   };
 }
 
@@ -1184,8 +1186,7 @@ function createEnemy(x,y,type){
   const e={x,y,t:type,w:30,h:48,vx:0,vy:0,onGround:false,facing:-1,
     alive:true,dying:false,dyingTimer:0,
     hp:type==='boss'?14:2,maxHp:type==='boss'?14:2,
-    // Vitesse des personnages ennemis ralentie pour garder un rythme type Mario.
-    speed:type==='boss'?1.15:type==='skeleton'?1.35:1.15,
+    speed:type==='boss'?0.95:type==='skeleton'?1.15:0.95,
     dmg:type==='boss'?2:1,
     detR:type==='boss'?600:280,atkR:type==='boss'?60:40,
     atkCD:0,walkCycle:0,walkTimer:0,
@@ -1243,6 +1244,24 @@ function hitEnemy(e,dmg=1){
   }
 }
 
+
+function restartCurrentLevelAfterFall(){
+  if(!player2 || player2.dead)return;
+  player2.hp--;
+  sfx('hurt');
+  spawnParticles(player2.x+player2.w/2, GAME_H-20, 'blood', 12);
+  if(player2.hp<=0){
+    player2.hp=0;
+    player2.dead=true;
+    return;
+  }
+  const remainingHp = player2.hp;
+  loadLevel(lvlIdx);
+  player2.hp = remainingHp;
+  player2.invincible = 80;
+  gs = GS.PLAY;
+}
+
 // ═══════════════════════════════════════════════════════════
 // COLLISION RÉSOLUTION
 // ═══════════════════════════════════════════════════════════
@@ -1275,21 +1294,12 @@ function resolveCol(ent,isPlayer){
     }
   }
   // Bounds
-  // Chute dans un trou : au niveau 2, Jack perd 1 cœur et recommence le niveau.
-  // Les autres niveaux gardent le comportement existant.
   if(ent.y+ent.h>GAME_H+60){
     if(isPlayer){
-      if(lvlIdx===1){
-        const remainingHp=ent.hp-1;
-        sfx('death');
-        if(remainingHp<=0){ent.hp=0;ent.dead=true;}
-        else{loadLevel(lvlIdx,remainingHp);return;}
-      }else{
-        playerHit(ent,5);ent.y=-80;ent.vy=0;
-      }
-    }else{
-      ent.y=-80;ent.vy=0;
+      if(lvlIdx===1){restartCurrentLevelAfterFall();return;}
+      playerHit(ent,5);
     }
+    ent.y=-80;ent.vy=0;
   }
   if(ent.x<0){ent.x=0;ent.vx=0;}
   if(ent.x+ent.w>lvl.width){ent.x=lvl.width-ent.w;ent.vx=0;}
@@ -1298,11 +1308,10 @@ function resolveCol(ent,isPlayer){
 // ═══════════════════════════════════════════════════════════
 // LEVEL LOADING
 // ═══════════════════════════════════════════════════════════
-function loadLevel(idx,hpOverride=null){
+function loadLevel(idx){
   lvlIdx=idx;lvl=JSON.parse(JSON.stringify(LEVELS[idx]));
   particles=[];bullets2=[];
   player2=createPlayer(lvl.playerStart.x,lvl.playerStart.y);
-  if(hpOverride!==null){player2.hp=Math.max(0,Math.min(player2.maxHp,hpOverride));}
   window._player=player2;
   enemies2=lvl.enemies.map(e=>createEnemy(e.x,e.y,e.t));
   // Boss
